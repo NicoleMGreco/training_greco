@@ -73,6 +73,16 @@ birds_obs_subset<- birds_obs_subset%>%
 unique(birds_obs_subset$observer)
 ```
 
+## Bonus: Use a new package lubridate to wrangle the date data and find the total number of birds by park and month
+```{r}
+birds_obs_subset<- birds_obs_subset%>%
+  mutate(survey_month = lubridate::month(survey_date))%>%
+  mutate(survey_month = as.factor(survey_month))%>%
+  dplyr::relocate(survey_month, .after = survey_date)%>%
+  filter(park_name %in% c("Lindo","Orme","Palomino","Sonrisa"))%>%
+  group_by(park_name, survey_month) %>%
+  summarize(tot_bird_count_month=n())
+```
 
 
 
