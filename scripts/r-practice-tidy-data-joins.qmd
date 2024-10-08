@@ -15,12 +15,67 @@ library(lubridate) # for bonus question
 
 ## Read data
 ```{r}
-birds_original <- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.256.10&entityid=53edaa7a0e083013d9bf20322db1780e")
-surveys_original<- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.256.10&entityid=b2466fa5cb5ed7ee1ea91398fc291c59")
-sites_original<- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.256.10&entityid=81bf72420e69077097fb0790dcdc63a6")
-taxa_original<- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.256.10&entityid=58f863b7e3066e68536a9cacdc7bd58e")
+birds_observations <- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.256.10&entityid=53edaa7a0e083013d9bf20322db1780e")
+surveys<- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.256.10&entityid=b2466fa5cb5ed7ee1ea91398fc291c59")
+sites<- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.256.10&entityid=81bf72420e69077097fb0790dcdc63a6")
+taxalist<- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.256.10&entityid=58f863b7e3066e68536a9cacdc7bd58e")
 
 ```
 
-filter for multiple classes:
-filter(Region %in% c('SSE', ALU'))
+## Subset bird observations
+```{r}
+birds_subset<- birds_observations%>%
+  filter(species_id %in% c("BHCO","RWBL")) %>%
+  filter(site_id %in% c("LI-W","NU-C"))
+```
+
+## Use left_join() to merge birds_subset with the tables sites
+Merge based on siteID, outcome dataframe will likely have survey id, site id (Li-W and NU-C only_), species id (BHCO and RWBL only), distance, bird count, notes, seen, heard, direction, park code, park district, park name, point code, point location, point acreage
+```{r}
+birds_left<- birds_subset %>%
+  left_join(y=sites, by="site_id")
+
+```
+
+## Use full_join() to merge birds_subset and sites tables
+```{r}
+birds_full<- birds_subset %>%
+  full_join(y=sites, by="site_id")
+```
+
+## Use inner_join() to merge birds_subset and taxalist data
+```{r}
+birds_inner<- birds_subset %>%
+  inner_join(y=taxalist, by="species_id")
+
+birds_inner<- birds_subset %>%
+  left_join(y=taxalist, by="species_id")
+```
+
+## Wrangle bird_observations data and merge the data with all the other tables (sites, surveys, and taxalist)
+```{r}
+birds_observations<- birds_observations%>%
+  rename(birds_obs_notes= notes)
+birds_obs_subset<- birds_observations%>%
+  full_join(y=taxalist, by="species_id")%>%
+  full_join(y=sites, by="site_id")%>%
+  full_join(y=surveys, by=c("site_id", "survey_id"))%>%
+  select(survey_date, common_name, park_name, bird_count, observer)
+```
+
+## Explore observer data and fix the values within this column so that all values are in the same format
+```{r}
+unique(birds_obs_subset$observer)
+birds_obs_subset<- birds_obs_subset%>%
+  mutate(observer=if_else(condition=observer=="Josh Burns",
+                         true="J. Burns",
+                         false=observer))
+unique(birds_obs_subset$observer)
+```
+
+
+
+
+
+
+
