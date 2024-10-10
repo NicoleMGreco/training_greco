@@ -1,0 +1,13 @@
+---
+title: "R Practice: Functions"
+author: "Nicole Greco"
+format: html
+---
+
+# Load Packages
+
+
+# Load Data
+
+
+# Analysis
